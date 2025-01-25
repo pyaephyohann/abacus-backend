@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AbacusUsers {
+  id              Int                   @id @default(autoincrement())
+  username        String                @unique
+  phone           String                @unique
+  email           String                @unique
+  password        String
+  otpCode         Int?
+  otpSendTimes    Json?
+  otpCreatedAt    DateTime?
+  assetUrl        String?
+  accessToken     String?               @db.VarChar(1024)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @default(now()) @updatedAt
+  deletedAt       DateTime              @default(now())
+  QuestionSetting QuestionSetting[]
+  UserResponse    SurveyUserResponses[]
+}
+
+model QuestionSetting {
+  id                    Int                     @id @default(autoincrement())
+  userId                Int
+  user                  AbacusUsers             @relation(fields: [userId], references: [id])
+  row                   Int
+  digit                 Int
+  breakTime             Int
+  showType              QuestionShowType
+  speed                 Float
+  round                 Int
+  isComplete            Boolean                 @default(false)
+  isExam                Boolean                 @default(false)
+  examTime              DateTime?
+  examName              String?
+  Questions             Questions[]
+  SavedQuestionSettings SavedQuestionSettings[]
+}
+
+model Questions {
+  id                Int             @id @default(autoincrement())
+  questionSettingId Int
+  questionSetting   QuestionSetting @relation(fields: [questionSettingId], references: [id])
+  question          String
+  answer            Int
+  userAnswer        Int?
+  roundNumber       Int
+  startTime         DateTime?
+  endTime           DateTime?
+  isCorrect         Boolean?
+}
+
+model SavedQuestionSettings {
+  id                Int             @id @default(autoincrement())
+  questionSettingId Int
+  questionSetting   QuestionSetting @relation(fields: [questionSettingId], references: [id])
+  name String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+model SurveyQuestions {
+  id        Int                   @id @default(autoincrement())
+  title     String
+  type      SurveyQuestionType
+  answers   SurveyAnswers[]
+  responses SurveyUserResponses[]
+}
+
+model SurveyAnswers {
+  id            Int                   @id @default(autoincrement())
+  title         String
+  question      SurveyQuestions       @relation(fields: [questionId], references: [id])
+  questionId    Int
+}
+
+model SurveyUserResponses {
+  id         Int             @id @default(autoincrement())
+  userId     Int
+  user       AbacusUsers     @relation(fields: [userId], references: [id])
+  question   SurveyQuestions @relation(fields: [questionId], references: [id])
+  questionId Int
+  answerTitle String
+}
+
+model Levels {
+  id          Int      @id @default(autoincrement())
+  digit       Int
+  row         Int
+  isActive    Boolean
+  order       Int
+  name        String
+  description String?
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+enum SurveyQuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+}
+
+enum QuestionShowType {
+  CALCULATION
+  LISTENING
+  FLASHCARD
+}
